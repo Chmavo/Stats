@@ -1,0 +1,154 @@
+---
+title: "Do Smaller Class Sizes Coincide With Better Test Scores?"
+author: "Charles M. Voelker"
+date: "STAT.GB 2301, NYU Stern School of Business, February 2018"
+output: 
+  pdf_document: 
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/cmvoelker/Data Sandbox/RMVDA_2018/reg_mva_hw/hw1")
+library(ggplot2)
+library(gvlma)
+```
+
+```{r dataload}
+#load dataset downloaded from NYC Open Data
+alldata <-
+  read.csv(
+    "data/nyc_scores_classsize.csv",
+    sep = ",",
+    header = TRUE
+  )
+#Remove ny incomplete cases (this happens because the pupil-teacher dataset contains
+#observations for all grades whereas the test scores dataset contains only grades 1-8)
+nycdata <-
+  alldata[, c("SCHOOLWIDE.PUPIL.TEACHER.RATIO", "Mean.Scale.Score")]
+nycdata <- nycdata[complete.cases(nycdata), ]
+```
+
+```{r scatterplot}
+#Plot the dataset to view any interesting observations or trends
+plot(nycdata,
+     main = "Mean Math Test Score vs Pupil-Teacher Ratio, All Grades, 2011",
+     xlab = "Pupil-Teacher Ratio",
+     ylab = "Mean Math Score - NY Regents Test")
+```
+
+```{r init_linreg}
+#Fit linear regression line to the data and store as object
+nycdata.lm <-
+  lm(formula = nycdata$Mean.Scale.Score ~ nycdata$SCHOOLWIDE.PUPIL.TEACHER.RATIO)
+#Get residuals for linear regression model
+nycdata.res <- resid(nycdata.lm)
+#summary statistics
+summary(nycdata.lm)
+```
+
+```{r confint_plot, warning=FALSE}
+temp_var <- predict(nycdata.lm, interval = "prediction")
+new_df <- cbind(nycdata, temp_var)
+
+ggplot(new_df,
+       aes(SCHOOLWIDE.PUPIL.TEACHER.RATIO, Mean.Scale.Score)) +
+  geom_point() +
+  geom_line(aes(y = lwr), color = "red", linetype = "dashed") +
+  geom_line(aes(y = upr), color = "red", linetype = "dashed") +
+  geom_smooth(method = lm, se = TRUE) + ggtitle("Mean Math Test Score vs Pupil-Teacher Ratio, Grades 1-8, 2011") +
+  xlab("Pupil-Teacher Ratio") + ylab("Mean Math Score - NY Regents Test")
+```
+
+```{r residuals}
+nycdata_assess<-gvlma(Mean.Scale.Score ~ SCHOOLWIDE.PUPIL.TEACHER.RATIO,data=nycdata)
+plot(nycdata_assess)
+```
+
+```{r glvmatest}
+nycdata_assess
+```
+
+```{r gvlmadel, eval=FALSE, echo=FALSE}
+nycdata_del<-deletion.gvlma(nycdata_assess)
+summary(nycdata_del)
+```
+```{r linreg2, warning=FALSE}
+nycdata_a<-nycdata[-c(70,100,144),]
+ nycdata_a.lm<-
+   lm(formula = nycdata_a$Mean.Scale.Score ~ nycdata_a$SCHOOLWIDE.PUPIL.TEACHER.RATIO)
+ 
+ temp_var <- predict(nycdata_a.lm, interval = "prediction")
+new_df <- cbind(nycdata_a, temp_var)
+
+ggplot(new_df,
+       aes(SCHOOLWIDE.PUPIL.TEACHER.RATIO, Mean.Scale.Score)) +
+  geom_point() +
+  geom_line(aes(y = lwr), color = "red", linetype = "dashed") +
+  geom_line(aes(y = upr), color = "red", linetype = "dashed") +
+  geom_smooth(method = lm, se = TRUE) + ggtitle("Mean Math Test Score vs Pupil-Teacher Ratio, Grades 1-8, 2011") +
+  xlab("Pupil-Teacher Ratio") + ylab("Mean Math Score - NY Regents Test")
+```
+```{r}
+summary(nycdata_a.lm)
+```
+
+```{r}
+ nycdata_a_assess<-gvlma(Mean.Scale.Score ~ SCHOOLWIDE.PUPIL.TEACHER.RATIO,data=nycdata_a)
+plot(nycdata_a_assess)
+```
+```{r}
+nycdata_a_assess
+```
+
+```{r, eval=FALSE, echo=FALSE}
+nycdata_a_del<-deletion.gvlma(nycdata_a_assess)
+summary(nycdata_a_del)
+```
+
+```{r}
+#bring in borough to see if more accurate models can be built for each
+nycdata_b <-
+  alldata[, c("SCHOOLWIDE.PUPIL.TEACHER.RATIO", "Mean.Scale.Score", "BOROUGH")]
+nycdata_b <- nycdata_b[complete.cases(nycdata), ]
+nycdata_b<-nycdata_b[-c(70,100,144),]
+plot(nycdata_b$BOROUGH)
+```
+
+```{r,warning=FALSE}
+manhattan<-nycdata_b[nycdata_b$BOROUGH=="M",]
+exmanhattan<-nycdata_b[nycdata_b$BOROUGH=="X",]
+ manhattan.lm<-
+   lm(formula = manhattan$Mean.Scale.Score ~ manhattan$SCHOOLWIDE.PUPIL.TEACHER.RATIO)
+  exmanhattan.lm<-
+   lm(formula = exmanhattan$Mean.Scale.Score ~ exmanhattan$SCHOOLWIDE.PUPIL.TEACHER.RATIO)
+ 
+ temp_var <- predict(manhattan.lm, interval = "prediction")
+new_df <- cbind(manhattan, temp_var)
+ temp_var2 <- predict(exmanhattan.lm, interval = "prediction")
+new_df2 <- cbind(exmanhattan, temp_var2)
+
+ggplot(nycdata_b,
+       aes(SCHOOLWIDE.PUPIL.TEACHER.RATIO, Mean.Scale.Score, color=nycdata_b$BOROUGH)) +
+  geom_point() +
+  geom_line(data=new_df,aes(y = lwr), color = "red", linetype = "dashed") +
+  geom_line(data=new_df,aes(y = upr), color = "red", linetype = "dashed") +
+  geom_smooth(data=new_df,method = lm, se = TRUE, aes(color="M")) + 
+  geom_smooth(data=new_df2,method = lm, se=TRUE, aes(SCHOOLWIDE.PUPIL.TEACHER.RATIO, Mean.Scale.Score, color="X"))+
+    geom_line( data=new_df2,aes(y = new_df2$lwr), color = "blue", linetype = "dashed") +
+  geom_line( data=new_df2, aes(y = upr), color = "blue", linetype = "dashed")+ggtitle("Mean Math Test Score vs Pupil-Teacher Ratio, Grades 1-8, 2011") +
+  xlab("Pupil-Teacher Ratio") + ylab("Mean Math Score - NY Regents Test") + scale_color_manual(name="Location",values=c(M="red", X="blue"))
+summary(manhattan.lm)
+```
+```{r}
+summary(exmanhattan.lm)
+```
+```{r}
+ manhattan_assess<-gvlma(Mean.Scale.Score ~ SCHOOLWIDE.PUPIL.TEACHER.RATIO,data=manhattan)
+manhattan_assess
+```
+
+```{r}
+print(paste0("Ex-Manhattan Score Variance: ",var(exmanhattan$SCHOOLWIDE.PUPIL.TEACHER.RATIO)))
+print(paste0("Manhattan Score Variance: ",var(manhattan$SCHOOLWIDE.PUPIL.TEACHER.RATIO)))
+```

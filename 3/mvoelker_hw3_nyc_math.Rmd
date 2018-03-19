@@ -1,0 +1,56 @@
+---
+title: "Predicting x from Air Quality Indicators"
+author: "Charles M Voelker"
+date: "STAT.GB 2301, NYU Stern School of Business, March 2018"
+output: 
+  pdf_document: 
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis/Homework/3")
+```
+
+```{r dataload}
+#load dataset downloaded from NYC Open Data
+#SCORE DATA
+mathscores_alldata <-
+read.csv2(
+"/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis/Homework/3/2006_-_2012__Math_Test_Results__-_All_Students.csv",
+header = TRUE,
+sep = ","
+)
+mathscores <-
+subset(mathscores_alldata, Grade == "All Grades" & Year == "2011")
+
+#DEMOGRAPHIC DATA
+demo_alldata <-
+read.csv2(
+"/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis/Homework/3/2006_-_2012_School_Demographics_and_Accountability_Snapshot.csv",
+header = TRUE,
+sep = ","
+)
+demos<-
+  subset(demo_alldata, schoolyear=="20102011")
+
+#SURVEY DATA
+survey <-
+read.csv2(
+"/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis/Homework/3/2010_-_2011_School_Progress_Reports_-_All_Schools.csv",
+header = TRUE,
+sep = ","
+)
+#JOIN DATASETS
+nyc<-merge(demos,mathscores)
+nyc<-merge(nyc,survey)
+nyc<-subset(nyc,SCHOOL.LEVEL.=="Elementary")
+nyc <- nyc[,!grepl(".*grade.*|.*GRADE|Grade.*|SCHOOL|.*Level.*|asian.*|black.*|white.*|
+                   |hispanic.*|sped.*|.*_num|PRINCIPAL|DISTRICT|Name|schoolyear|
+                   |fl_percent|Demographic|prek|k|Year|female_per|Number.*|ell.*", names( nyc) )]
+
+```

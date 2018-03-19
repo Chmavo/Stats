@@ -1,0 +1,32 @@
+---
+title: "Predicting x from Air Quality Indicators"
+author: "Charles M Voelker"
+date: "STAT.GB 2301, NYU Stern School of Business, March 2018"
+output: 
+  pdf_document: 
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis/Homework/3")
+library(ggplot2)
+library(gvlma)
+```
+
+```{r dataload}
+#load dataset downloaded from NYC Open Data
+airdata <-
+  read.csv(
+    "air_quality.csv",
+    sep = ",",
+    header = TRUE
+  )
+#airdata <- airdata[complete.cases(airdata), ]
+summary(airdata)
+View(airdata)
+```

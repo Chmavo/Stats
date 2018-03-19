@@ -1,0 +1,53 @@
+---
+title: "Homework 1"
+author: "Max Voelker"
+date: "2/3/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r datain, warning=FALSE}
+setwd("/Users/cmvoelker/Documents/MBA/Spring 2018/Regression and Multivariate Analysis")
+data<-read.table("data/newscirc.csv",sep=",",header=TRUE)
+plot(data$Daily.circulation,data$Sunday.circulation, xlab = "Daily Circulation (thousands)", ylab = "Sunday Circulation (thousands)", main="Daily Circulation Vs Sunday Circulation")
+data.model=lm(Sunday.circulation ~ Daily.circulation, data=data)
+abline(data.model)
+```
+The data indicate positive correlation between daily circulation and Sunday Circulation.
+
+```{R}
+summary(data.model)
+confint(data.model)
+```
+
+(c) Confidence intervals for $\beta_0$ are (590.2185 1045.11), and (1.195594  1.483836) for $\beta_1$   
+
+$H_o:\beta_1=0$   
+$H_a:\beta_1\ne 0$    
+
+(d) In this case we use the F-Test for signficance. THe F-Statistic of this model is 358.5, indicating high significance of the independent variable.
+(e) $R^2$ of this model is 91.55%, which is the amount of variance in Sunday circulation explained by daily circulation.
+(f) The interval estimate for a newspaper with average daily circulation of 600K is (772.3369, 862.9921).
+
+```{r}
+newdata<-data.frame(Daily.circulation=600)
+predict(data.model,newdata, interval="confidence",se.fit=TRUE)
+```
+
+(g) The output below gives the prediction interval (590.2185, 1045.11) which is wider than the confidence interval in step (f). This is due to the unknown variance of other observations that were not in the sample used to fit the line.
+
+```{r}
+predict(data.model,newdata, interval="prediction",se.fit=TRUE)
+```
+
+(h) The prediction interval of thenumber of Sunday subscribers for when the average number of weekly subscribers is 2,500K is (2988.881 3737.364). This is a wider interval than the prediction interval in (g) because the value of $\beta_1$ is much further away from the mean of 430.9625.
+
+```{r}
+mean(data$Daily.circulation)
+newdata<-data.frame(Daily.circulation=2500)
+predict(data.model,newdata, interval="prediction",se.fit=TRUE)
+```
